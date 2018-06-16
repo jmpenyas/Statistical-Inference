@@ -1,0 +1,89 @@
+---
+title: "Statistical Inference: ToothGrowth data set analysis"
+author: José Manuel Peñas
+output: 
+        pdf_document:
+                toc: true
+                toc_depth: 2
+                df_print: kable
+                number_sections: true
+---
+
+# Overview
+
+The present document will analyze the the **ToothGrowth** data set, giving basic information, exploratory plots and reaching conclusions about the effect of supplement delivery and the dosage over tooth growth.
+
+# Analysis
+Getting this from the documentation, the **ToothGrowth** contains data from an experiment that measures the  Effect of Vitamin C on Tooth Growth in Guinea Pigs.
+
+## Loading & some basic exploratory data analysis
+We load the data set and check the data stored.
+```{r load, echo=T,,out.height = "50%" }
+# Used in the plots later
+library(ggplot2)
+# loading the data
+data(ToothGrowth)
+# Getting the structure
+str(ToothGrowth)
+# Summary
+summary(ToothGrowth)
+```
+
+Now, we are going to plot the distribution of the tooth growth by dosage and delivery method.   
+```{r plotByDose,out.width = "50%" }
+g <- ggplot(ToothGrowth, aes(x=supp, y=len)) +
+        geom_boxplot(outlier.shape=8, outlier.colour = "red", aes(fill=supp))
+g <- g + ggtitle("Tooth Grow Length / Delivery Method by Dossage") + xlab("Delivery method") +ylab("Grow length")
+g <- g + facet_grid(.~ dose)
+g
+# Convert the variable dose from a numeric to a factor variable
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+g <- ggplot(ToothGrowth, aes(x=dose, y=len)) +
+        geom_boxplot(outlier.shape=8, outlier.colour = "red", aes(fill=dose))
+g <- g + ggtitle("Tooth Grow Length / Dossage by Delivery Method") + xlab("Dossage") +ylab("Grow length")
+g <- g + facet_grid(.~ supp)
+g
+```
+
+The first exploratory analysis shows that it seems an increase of the dose could mean an increase on tooth length and that the delivery method is not a factor on that growth. Let's check it out these hypothesis.
+
+
+## Confidence intervals and hypothesis tests
+The null Hypothesis in both cases is that so supp as dose has no effect over the grow. We will test them using t distribution test.
+```{r t.testSupp}
+c(t.test(len ~ supp, data=ToothGrowth)$p.value,t.test(len ~ supp, data=ToothGrowth)$conf.int)
+```
+
+The *p-value* is over *5%* and the confidence interval contains zero. We **cannot reject the null hypotesis**.
+```{r t.testDose}
+# As the t.test only works with 2-level factors, we test for every combination
+# and stored the p-value and confidence interval in a matrix
+resultados <-
+        c(
+                "0.5 & 1",
+                t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(.5, 1)))$p.value,
+                t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(.5, 1)))$conf.int
+        )
+resultados <- rbind(resultados, c(
+        "0.5 & 2",
+        t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(.5, 2)))$p.value,
+        t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(.5, 2)))$conf.int
+))
+resultados <- rbind(resultados, c(
+        "1 & 2",
+        t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(1, 2)))$p.value,
+        t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(1, 2)))$conf.int
+))
+colnames(resultados) <- c("Combination","P.value","Conf.Int.Min","Conf.Int.Max")
+rownames(resultados) <- NULL
+data.frame(resultados)
+```
+
+Neither of the three combinations of doses contains zero in the respective confidence interval and the p-value is extremely low on the 3 cases, way down the *5%* threshold. We can **reject the the null hypotesis**.
+
+# Conclussion   
+We are assuming that this sample is representative of the population of this experiment and any inference here could be applied to the total population.   
+1. Does the **delivery method** of the supplement has any effect on tooth growth?    
+* **No**. We cannot infer that answer as neither the box plot nor the t.test, where we couldn't reject the null hypothesis, could confirm it.   
+2. Does the **dossage** of the supplement has any effect on tooth growth?    
+* **Yes**. We are able to infer that answer as the box plot as the t.test, where we could reject the null hypothesis, confirm it.

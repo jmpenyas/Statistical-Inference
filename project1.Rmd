@@ -1,5 +1,5 @@
 ---
-title: "Statistical Inference: Sample Project Report Structure"
+title: "Statistical Inference: Exponential Distribution Simulation"
 author: José Manuel Peñas
 output: 
         pdf_document:
@@ -16,7 +16,7 @@ Finally, it will show the difference between the distribution of a large number 
 
 # Simulations
 
-The simulation will work with exponential distributions of 40 elements with $\lambda$ of 0.2. Therefore the mean and the standard deviation of the distrubtions will be $1/\lambda$: **5**
+The simulation will work with exponential distributions of 40 elements with $\lambda$ of 0.2. Therefore the mean and the standard deviation of the distributions will be $1/\lambda$: **5**
 With this initial data, it generates 1000 simulations of 40 random exponentials, calculate its means and stored in a vector that will be the base of the study.
 
 ```{r generation, echo=FALSE}
@@ -30,7 +30,7 @@ for (i in 1 : simul) sampleMeans = c(sampleMeans, mean(rexp(exp, lambda)))
 ```
 
 ## Show the sample mean and compare it to the theoretical mean of the distribution.
-As it was stated earlier the theoretical mean of this distrbution is **5**. The expected result with these number of samples.
+As it was stated earlier the theoretical mean of this distribution is **5**. The expected result with these number of samples.
 ```{r plotMean, echo=FALSE, out.width = "55%"}
 library(ggplot2)
 g <-
@@ -95,7 +95,7 @@ g <- g + stat_function(fun = dnorm, args = list(mean=theoretical, sd=theoretical
 print(g)
 ```
 
-Finally if we create a qqplot that compares the actual quantiles of the normalized values with the theoretical ones, the points are really close to the line, so it's not difficult to infer that following to the Central Limit Theorem that the distriubtion after 1000 samples is getting close to a normal one.
+Finally if we create a qqplot that compares the actual quantiles of the normalized values with the theoretical ones, the points are really close to the line, so it's not difficult to infer that following to the Central Limit Theorem that the distribution after 1000 samples is getting close to a normal one.
 ```{r plotMean3, echo=F, out.width = "60%"}
 normSMean <- (sampleMeans - theoretical) / (theoretical / sqrt(exp))
   y1 <- quantile(normSMean[!is.na(normSMean)], c(0.25, 0.75))
@@ -107,10 +107,13 @@ g <- ggplot(data.frame(normSMean), aes(sample = normSMean)) + stat_qq()
 g <- g + geom_abline(slope = slope, intercept = int)
 print(g)
 ```
-
+ \newpage  
+ 
 # APENDIX
 For reproducible research purposes, here it shows the R code used for this report
 ```{r fullCode, echo=T, results='hide', message=F}
+# Setting up the initial variables
+library(ggplot2)
 sampleMeans <- NULL
 exp <- 40
 lambda <- .2
@@ -118,8 +121,9 @@ theoretical <- 1 / lambda
 simul <- 1000
 set.seed(4169)
 for (i in 1:simul)
+# Vector of sample means        
 sampleMeans = c(sampleMeans, mean(rexp(exp, lambda)))
-#
+# Histogram of sample mean
 g <-
 ggplot(data.frame(sampleMeans), aes(x = sampleMeans)) + ggtitle("1000 Samples Means of 40 exponentials")
 g <-
@@ -132,14 +136,14 @@ aes(y = ..density..)
 g <- g + geom_vline(xintercept = theoretical,
 colour = "red",
 size = 1)
-#g
-#
+g
+# Obtaining the mean of the sample mean
 mean(sampleMeans)
-#
+# Theorical variance
 theoVariance <- 1 / lambda ^ 2 / exp
-#
+# Sample means Variance
 var(sampleMeans)
-#
+# Creating a plotting exponential distribution of 1k elements
 samp <- rexp(simul, lambda)
 g <-
 ggplot(data.frame(samp), aes(x = samp), main =) + ggtitle("1000 random Exponentials")
@@ -154,7 +158,8 @@ g <- g + geom_vline(xintercept = mean(samp),
 colour = "red",
 size = 1)
 g <- g + stat_function(fun = dexp, size = 1, colour = "blue")
-#
+g
+# Plotting the sample mean with the normal distribution of their normalized values
 g <- ggplot(data.frame(sampleMeans), aes(x = sampleMeans))
 g <-
 g + geom_histogram(
@@ -173,8 +178,10 @@ args = list(mean = theoretical, sd = theoretical / sqrt(exp)),
 size = 1,
 colour = "blue"
 )
-#
+g
+# QQ plot of the Sample Means
 normSMean <- (sampleMeans - theoretical) / (theoretical / sqrt(exp))
+# Info of the line of quantiles if it was normally distributed
 y1 <- quantile(normSMean[!is.na(normSMean)], c(0.25, 0.75))
 x1 <- qnorm(c(0.25, 0.75))
 slope <- diff(y1) / diff(x1)
@@ -182,6 +189,7 @@ int <- y1[1L] - slope * x1[1L]
 g <-
 ggplot(data.frame(normSMean), aes(sample = normSMean)) + stat_qq()
 g <- g + geom_abline(slope = slope, intercept = int)
+g
 ```
 
 
